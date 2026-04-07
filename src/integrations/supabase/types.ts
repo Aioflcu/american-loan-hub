@@ -14,7 +14,276 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      documents: {
+        Row: {
+          application_id: string | null
+          created_at: string
+          document_type: Database["public"]["Enums"]["document_type"]
+          file_name: string
+          file_size: number | null
+          file_url: string
+          id: string
+          status: string | null
+          user_id: string
+        }
+        Insert: {
+          application_id?: string | null
+          created_at?: string
+          document_type: Database["public"]["Enums"]["document_type"]
+          file_name: string
+          file_size?: number | null
+          file_url: string
+          id?: string
+          status?: string | null
+          user_id: string
+        }
+        Update: {
+          application_id?: string | null
+          created_at?: string
+          document_type?: Database["public"]["Enums"]["document_type"]
+          file_name?: string
+          file_size?: number | null
+          file_url?: string
+          id?: string
+          status?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documents_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "loan_applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      loan_applications: {
+        Row: {
+          amount: number
+          created_at: string
+          credit_score: number | null
+          debt_to_income: number | null
+          id: string
+          interest_rate: number | null
+          loan_type: Database["public"]["Enums"]["loan_type"]
+          monthly_payment: number | null
+          notes: string | null
+          purpose: string | null
+          reviewed_at: string | null
+          status: Database["public"]["Enums"]["application_status"]
+          submitted_at: string | null
+          term_months: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          credit_score?: number | null
+          debt_to_income?: number | null
+          id?: string
+          interest_rate?: number | null
+          loan_type: Database["public"]["Enums"]["loan_type"]
+          monthly_payment?: number | null
+          notes?: string | null
+          purpose?: string | null
+          reviewed_at?: string | null
+          status?: Database["public"]["Enums"]["application_status"]
+          submitted_at?: string | null
+          term_months: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          credit_score?: number | null
+          debt_to_income?: number | null
+          id?: string
+          interest_rate?: number | null
+          loan_type?: Database["public"]["Enums"]["loan_type"]
+          monthly_payment?: number | null
+          notes?: string | null
+          purpose?: string | null
+          reviewed_at?: string | null
+          status?: Database["public"]["Enums"]["application_status"]
+          submitted_at?: string | null
+          term_months?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      loans: {
+        Row: {
+          application_id: string | null
+          created_at: string
+          id: string
+          interest_rate: number
+          loan_type: Database["public"]["Enums"]["loan_type"]
+          maturity_date: string | null
+          monthly_payment: number
+          next_payment_date: string | null
+          origination_date: string
+          principal: number
+          remaining_balance: number
+          status: Database["public"]["Enums"]["loan_status"]
+          term_months: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          application_id?: string | null
+          created_at?: string
+          id?: string
+          interest_rate: number
+          loan_type: Database["public"]["Enums"]["loan_type"]
+          maturity_date?: string | null
+          monthly_payment: number
+          next_payment_date?: string | null
+          origination_date?: string
+          principal: number
+          remaining_balance: number
+          status?: Database["public"]["Enums"]["loan_status"]
+          term_months: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          application_id?: string | null
+          created_at?: string
+          id?: string
+          interest_rate?: number
+          loan_type?: Database["public"]["Enums"]["loan_type"]
+          maturity_date?: string | null
+          monthly_payment?: number
+          next_payment_date?: string | null
+          origination_date?: string
+          principal?: number
+          remaining_balance?: number
+          status?: Database["public"]["Enums"]["loan_status"]
+          term_months?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "loans_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "loan_applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payments: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          interest_amount: number | null
+          loan_id: string
+          payment_date: string
+          principal_amount: number | null
+          status: Database["public"]["Enums"]["payment_status"]
+          stripe_payment_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          interest_amount?: number | null
+          loan_id: string
+          payment_date: string
+          principal_amount?: number | null
+          status?: Database["public"]["Enums"]["payment_status"]
+          stripe_payment_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          interest_amount?: number | null
+          loan_id?: string
+          payment_date?: string
+          principal_amount?: number | null
+          status?: Database["public"]["Enums"]["payment_status"]
+          stripe_payment_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_loan_id_fkey"
+            columns: ["loan_id"]
+            isOneToOne: false
+            referencedRelation: "loans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          address_line1: string | null
+          address_line2: string | null
+          annual_income: number | null
+          city: string | null
+          created_at: string
+          date_of_birth: string | null
+          employer_name: string | null
+          employment_status: string | null
+          full_name: string | null
+          id: string
+          phone: string | null
+          ssn_last_four: string | null
+          state: string | null
+          updated_at: string
+          user_id: string
+          zip_code: string | null
+        }
+        Insert: {
+          address_line1?: string | null
+          address_line2?: string | null
+          annual_income?: number | null
+          city?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          employer_name?: string | null
+          employment_status?: string | null
+          full_name?: string | null
+          id?: string
+          phone?: string | null
+          ssn_last_four?: string | null
+          state?: string | null
+          updated_at?: string
+          user_id: string
+          zip_code?: string | null
+        }
+        Update: {
+          address_line1?: string | null
+          address_line2?: string | null
+          annual_income?: number | null
+          city?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          employer_name?: string | null
+          employment_status?: string | null
+          full_name?: string | null
+          id?: string
+          phone?: string | null
+          ssn_last_four?: string | null
+          state?: string | null
+          updated_at?: string
+          user_id?: string
+          zip_code?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +292,34 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      application_status:
+        | "draft"
+        | "submitted"
+        | "under_review"
+        | "approved"
+        | "rejected"
+        | "withdrawn"
+      document_type:
+        | "id_verification"
+        | "income_proof"
+        | "bank_statement"
+        | "tax_return"
+        | "employment_letter"
+        | "other"
+      loan_status: "active" | "paid_off" | "defaulted" | "deferred"
+      loan_type:
+        | "personal"
+        | "mortgage"
+        | "auto"
+        | "business"
+        | "student"
+        | "home_equity"
+      payment_status:
+        | "scheduled"
+        | "pending"
+        | "completed"
+        | "failed"
+        | "refunded"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +446,39 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      application_status: [
+        "draft",
+        "submitted",
+        "under_review",
+        "approved",
+        "rejected",
+        "withdrawn",
+      ],
+      document_type: [
+        "id_verification",
+        "income_proof",
+        "bank_statement",
+        "tax_return",
+        "employment_letter",
+        "other",
+      ],
+      loan_status: ["active", "paid_off", "defaulted", "deferred"],
+      loan_type: [
+        "personal",
+        "mortgage",
+        "auto",
+        "business",
+        "student",
+        "home_equity",
+      ],
+      payment_status: [
+        "scheduled",
+        "pending",
+        "completed",
+        "failed",
+        "refunded",
+      ],
+    },
   },
 } as const
