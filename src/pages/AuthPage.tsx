@@ -37,7 +37,7 @@ const AuthPage = () => {
     if (error) {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
     } else if (isSignUp) {
-      toast({ title: 'Check your email', description: 'We sent you a confirmation link.' });
+      toast({ title: 'Account created', description: 'Welcome to LendFlow!' });
     }
     setSubmitting(false);
   };

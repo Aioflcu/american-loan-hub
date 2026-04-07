@@ -49,7 +49,7 @@ const DocumentsPage = () => {
     if (!file || !docType || !user) return;
 
     setUploading(true);
-    const filePath = `${user.id}/${Date.now()}_${file.name}`;
+    const filePath = `${user.uid}/${Date.now()}_${file.name}`;
 
     const { error: uploadError } = await supabase.storage.from('loan-documents').upload(filePath, file);
     if (uploadError) {
@@ -61,7 +61,7 @@ const DocumentsPage = () => {
     const { data: { publicUrl } } = supabase.storage.from('loan-documents').getPublicUrl(filePath);
 
     const { error: insertError } = await supabase.from('documents').insert({
-      user_id: user.id,
+      user_id: user.uid,
       document_type: docType,
       file_name: file.name,
       file_url: publicUrl,
