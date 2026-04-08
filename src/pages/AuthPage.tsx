@@ -131,7 +131,7 @@ const AuthPage = () => {
                   <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
                     id="fullName"
-                    placeholder="John Doe"
+                    placeholder="Prince Rogers Nelson"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     className="pl-10"
@@ -148,7 +148,7 @@ const AuthPage = () => {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="john@example.com"
+                  placeholder="prince@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="pl-10"

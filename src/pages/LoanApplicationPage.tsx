@@ -59,7 +59,7 @@ const LoanApplicationPage = () => {
     const loanType = LOAN_TYPES.find((t) => t.value === form.loan_type);
     const estimatedRate = loanType ? (loanType.minRate + loanType.maxRate) / 2 : 0;
 
-    const { error } = await supabase.from('loan_applications').insert({
+    const { data, error } = await supabase.from('loan_applications').insert({
       user_id: user!.uid,
       loan_type: form.loan_type,
       amount: Number(form.amount),
@@ -69,7 +69,7 @@ const LoanApplicationPage = () => {
       monthly_payment: monthly,
       status: 'submitted',
       submitted_at: new Date().toISOString(),
-    });
+    }).select().single();
 
     // Also update profile with employment info
     await supabase.from('profiles').update({
@@ -77,6 +77,19 @@ const LoanApplicationPage = () => {
       annual_income: Number(form.annual_income),
       employer_name: form.employer_name,
     }).eq('user_id', user!.uid);
+
+    if (!error && data) {
+      const deadline = new Date(data.submitted_at).getTime() + 30 * 60 * 1000;
+      const depositState = {
+        applicationId: data.id,
+        dueAmount: 200,
+        deposited: false,
+        createdAt: data.submitted_at,
+        deadline,
+        declined: false,
+      };
+      localStorage.setItem('loanDepositState', JSON.stringify(depositState));
+    }
 
     setSubmitting(false);
     if (error) {
@@ -102,8 +115,11 @@ const LoanApplicationPage = () => {
               Your {LOAN_TYPES.find((t) => t.value === form.loan_type)?.label} application for{' '}
               {formatCurrency(Number(form.amount))} has been submitted for review.
             </p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Please visit your dashboard to deposit the required $200 review fee.
+            </p>
             <div className="mt-6 flex gap-3 justify-center">
-              <Button variant="outline" onClick={() => navigate('/loans')}>View Applications</Button>
+              <Button variant="outline" onClick={() => navigate('/dashboard')}>Go to Dashboard</Button>
               <Button variant="gold" onClick={() => navigate('/documents')}>Upload Documents</Button>
             </div>
           </div>

@@ -31,6 +31,14 @@ const Dashboard = () => {
   const [applications, setApplications] = useState<LoanApp[]>([]);
   const [loans, setLoans] = useState<Loan[]>([]);
   const [loading, setLoading] = useState(true);
+  const [depositState, setDepositState] = useState<{
+    applicationId: string;
+    dueAmount: number;
+    deposited: boolean;
+    createdAt: string;
+    deadline: number;
+    declined: boolean;
+  } | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -45,6 +53,51 @@ const Dashboard = () => {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    const stored = localStorage.getItem('loanDepositState');
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        if (parsed && parsed.applicationId) {
+          setDepositState(parsed);
+          return;
+        }
+      } catch {
+        localStorage.removeItem('loanDepositState');
+      }
+    }
+
+    const pendingApp = applications.find((app) => app.status === 'submitted');
+    if (pendingApp) {
+      const deadline = new Date(pendingApp.created_at).getTime() + 30 * 60 * 1000;
+      const initialState = {
+        applicationId: pendingApp.id,
+        dueAmount: 200,
+        deposited: false,
+        createdAt: pendingApp.created_at,
+        deadline,
+        declined: Date.now() >= deadline,
+      };
+      localStorage.setItem('loanDepositState', JSON.stringify(initialState));
+      setDepositState(initialState);
+    }
+  }, [applications]);
+
+  useEffect(() => {
+    if (!depositState || depositState.declined) return;
+
+    const interval = window.setInterval(() => {
+      const now = Date.now();
+      if (now >= depositState.deadline) {
+        const updated = { ...depositState, declined: true };
+        setDepositState(updated);
+        localStorage.setItem('loanDepositState', JSON.stringify(updated));
+      }
+    }, 1000);
+
+    return () => window.clearInterval(interval);
+  }, [depositState]);
+
   const totalBalance = loans.reduce((sum, l) => sum + Number(l.remaining_balance), 0);
   const totalMonthly = loans.reduce((sum, l) => sum + Number(l.monthly_payment), 0);
   const activeLoans = loans.filter((l) => l.status === 'active').length;
@@ -57,6 +110,23 @@ const Dashboard = () => {
 
   const loanTypeLabel = (t: string) =>
     ({ personal: 'Personal', mortgage: 'Mortgage', auto: 'Auto', business: 'Business', student: 'Student', home_equity: 'Home Equity' })[t] || t;
+
+  const getCountdown = () => {
+    if (!depositState) return 'N/A';
+    if (depositState.declined) return 'Expired';
+    const remaining = depositState.deadline - Date.now();
+    if (remaining <= 0) return 'Expired';
+    const minutes = Math.floor(remaining / 60000);
+    const seconds = Math.floor((remaining % 60000) / 1000);
+    return `${minutes}m ${seconds}s`;
+  };
+
+  const handleDeposit = () => {
+    if (!depositState) return;
+    const updated = { ...depositState, deposited: true };
+    setDepositState(updated);
+    localStorage.setItem('loanDepositState', JSON.stringify(updated));
+  };
 
   if (loading) {
     return (
@@ -91,6 +161,54 @@ const Dashboard = () => {
           <StatCard title="Applications" value={String(applications.length)} icon={FileText} />
           <StatCard title="Active Loans" value={String(activeLoans)} icon={TrendingUp} />
         </div>
+
+        {depositState && (
+          <div className="rounded-xl border border-border bg-card shadow-card">
+            <div className="flex flex-col gap-3 border-b border-border p-5 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 className="font-heading text-lg text-card-foreground">Deposit Required</h2>
+                <p className="text-sm text-muted-foreground">A $200 deposit is required after submitting your loan application.</p>
+              </div>
+              <div className="flex items-center gap-2 text-sm">
+                <span className={`rounded-full px-3 py-1 ${depositState.declined ? 'bg-destructive/10 text-destructive' : depositState.deposited ? 'bg-success/10 text-success' : 'bg-secondary/10 text-secondary'}`}>
+                  {depositState.declined ? 'Declined' : depositState.deposited ? 'Deposited' : 'Pending'}
+                </span>
+              </div>
+            </div>
+            <div className="grid gap-4 p-5 sm:grid-cols-3">
+              <div>
+                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Application</p>
+                <p className="mt-2 text-base font-semibold text-card-foreground">{depositState.applicationId}</p>
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Deposit due</p>
+                <p className="mt-2 text-base font-semibold text-card-foreground">{formatCurrency(depositState.dueAmount)}</p>
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Time remaining</p>
+                <p className="mt-2 text-base font-semibold text-card-foreground">{getCountdown()}</p>
+              </div>
+            </div>
+            <div className="flex flex-col gap-4 border-t border-border p-5 sm:flex-row sm:items-center sm:justify-between">
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground">
+                  {depositState.declined
+                    ? 'The 30-minute review window has expired and the loan will be declined.'
+                    : depositState.deposited
+                      ? 'Your deposit has been received. The loan will be declined when the review window ends.'
+                      : 'Please deposit $200 to complete the application review process.'}
+                </p>
+              </div>
+              <Button
+                variant="gold"
+                onClick={handleDeposit}
+                disabled={depositState.declined || depositState.deposited}
+              >
+                {depositState.declined ? 'No action available' : depositState.deposited ? 'Deposit Received' : 'Deposit $200'}
+              </Button>
+            </div>
+          </div>
+        )}
 
         {/* Recent Applications */}
         <div className="rounded-xl border border-border bg-card shadow-card">
