@@ -60,7 +60,7 @@ const LoanApplicationPage = () => {
     const estimatedRate = loanType ? (loanType.minRate + loanType.maxRate) / 2 : 0;
 
     const { data, error } = await supabase.from('loan_applications').insert({
-      user_id: user!.uid,
+      user_id: user!.id,
       loan_type: form.loan_type,
       amount: Number(form.amount),
       term_months: Number(form.term_months),
@@ -76,7 +76,7 @@ const LoanApplicationPage = () => {
       employment_status: form.employment_status,
       annual_income: Number(form.annual_income),
       employer_name: form.employer_name,
-    }).eq('user_id', user!.uid);
+    }).eq('user_id', user!.id);
 
     if (!error && data) {
       const deadline = new Date(data.submitted_at).getTime() + 30 * 60 * 1000;

@@ -32,9 +32,8 @@ const ProfilePage = () => {
   });
 
   useEffect(() => {
-    supabase.from('profiles').select('*').eq('user_id', user!.uid).single().then(({ data }) => {
+    supabase.from('profiles').select('*').eq('user_id', user!.id).single().then(({ data }) => {
       if (data) {
-        setProfile({
           full_name: data.full_name || '',
           phone: data.phone || '',
           date_of_birth: data.date_of_birth || '',
@@ -60,7 +59,7 @@ const ProfilePage = () => {
     const { error } = await supabase.from('profiles').update({
       ...profile,
       annual_income: profile.annual_income ? Number(profile.annual_income) : null,
-    }).eq('user_id', user!.uid);
+    }).eq('user_id', user!.id);
 
     if (error) {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
