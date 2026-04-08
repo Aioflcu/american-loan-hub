@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import AppLayout from '@/components/AppLayout';
@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, CheckCircle } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CheckCircle, Upload, FileText, Trash2 } from 'lucide-react';
 
 const LOAN_TYPES = [
   { value: 'personal', label: 'Personal Loan', minRate: 5.99, maxRate: 24.99 },
@@ -22,6 +22,12 @@ const LOAN_TYPES = [
 
 const TERM_OPTIONS = [12, 24, 36, 48, 60, 72, 84, 120, 180, 240, 360];
 
+const REQUIRED_DOCS = [
+  { value: 'id_verification', label: 'ID Verification (Passport/License)' },
+  { value: 'income_proof', label: 'Proof of Income' },
+  { value: 'bank_statement', label: 'Bank Statement' },
+];
+
 const LoanApplicationPage = () => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -29,6 +35,7 @@ const LoanApplicationPage = () => {
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState({
     loan_type: '',
@@ -39,6 +46,12 @@ const LoanApplicationPage = () => {
     annual_income: '',
     employer_name: '',
   });
+
+  const [documents, setDocuments] = useState<Array<{
+    type: string;
+    file: File;
+    uploaded: boolean;
+  }>>([]);
 
   const update = (field: string, value: string) => setForm((f) => ({ ...f, [field]: value }));
 
@@ -54,10 +67,56 @@ const LoanApplicationPage = () => {
 
   const monthly = calculateMonthly();
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const docType = REQUIRED_DOCS.find(d => !documents.some(doc => doc.type === d.value));
+    if (!docType) return;
+
+    setDocuments(prev => [...prev, { type: docType.value, file, uploaded: false }]);
+    if (fileRef.current) fileRef.current.value = '';
+  };
+
+  const removeDocument = (index: number) => {
+    setDocuments(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const uploadDocuments = async () => {
+    if (!user?.id) return false;
+
+    for (const doc of documents) {
+      if (doc.uploaded) continue;
+
+      const filePath = `${user.id}/${Date.now()}_${doc.file.name}`;
+      const { error: uploadError } = await supabase.storage.from('loan-documents').upload(filePath, doc.file);
+      if (uploadError) {
+        toast({ title: 'Upload failed', description: uploadError.message, variant: 'destructive' });
+        return false;
+      }
+
+      const { data: { publicUrl } } = supabase.storage.from('loan-documents').getPublicUrl(filePath);
+
+      const { error: insertError } = await supabase.from('documents').insert({
+        user_id: user.id,
+        document_type: doc.type,
+        file_name: doc.file.name,
+        file_url: publicUrl,
+        file_size: doc.file.size,
+      });
+
+      if (insertError) {
+        toast({ title: 'Error saving document', description: insertError.message, variant: 'destructive' });
+        return false;
+      }
+
+      doc.uploaded = true;
+    }
+    return true;
+  };
+
   const handleSubmit = async () => {
     setSubmitting(true);
-    const loanType = LOAN_TYPES.find((t) => t.value === form.loan_type);
-    const estimatedRate = loanType ? (loanType.minRate + loanType.maxRate) / 2 : 0;
 
     if (!user?.id || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(user.id)) {
       toast({
@@ -68,6 +127,16 @@ const LoanApplicationPage = () => {
       setSubmitting(false);
       return;
     }
+
+    // Upload documents first
+    const docsUploaded = await uploadDocuments();
+    if (!docsUploaded) {
+      setSubmitting(false);
+      return;
+    }
+
+    const loanType = LOAN_TYPES.find((t) => t.value === form.loan_type);
+    const estimatedRate = loanType ? (loanType.minRate + loanType.maxRate) / 2 : 0;
 
     const { data, error } = await supabase.from('loan_applications').insert({
       user_id: user.id,
@@ -86,7 +155,7 @@ const LoanApplicationPage = () => {
       employment_status: form.employment_status,
       annual_income: Number(form.annual_income),
       employer_name: form.employer_name,
-    }).eq('user_id', user!.id);
+    }).eq('user_id', user.id);
 
     if (!error && data) {
       const deadline = new Date(data.submitted_at).getTime() + 30 * 60 * 1000;
@@ -111,6 +180,12 @@ const LoanApplicationPage = () => {
 
   const formatCurrency = (n: number) =>
     new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n);
+
+  const formatSize = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1048576) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / 1048576).toFixed(1)} MB`;
+  };
 
   if (submitted) {
     return (
@@ -148,18 +223,18 @@ const LoanApplicationPage = () => {
 
         {/* Progress */}
         <div className="flex items-center gap-2">
-          {[1, 2, 3].map((s) => (
+          {[1, 2, 3, 4].map((s) => (
             <div key={s} className="flex items-center gap-2">
               <div className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold ${
                 step >= s ? 'bg-gradient-gold text-accent-foreground' : 'bg-muted text-muted-foreground'
               }`}>
                 {s}
               </div>
-              {s < 3 && <div className={`h-0.5 w-12 ${step > s ? 'bg-secondary' : 'bg-muted'}`} />}
+              {s < 4 && <div className={`h-0.5 w-12 ${step > s ? 'bg-secondary' : 'bg-muted'}`} />}
             </div>
           ))}
           <span className="ml-3 text-sm text-muted-foreground">
-            {step === 1 ? 'Loan Details' : step === 2 ? 'Employment' : 'Review'}
+            {step === 1 ? 'Loan Details' : step === 2 ? 'Employment' : step === 3 ? 'Documents' : 'Review'}
           </span>
         </div>
 
@@ -248,6 +323,59 @@ const LoanApplicationPage = () => {
 
           {step === 3 && (
             <div className="space-y-5">
+              <div>
+                <h3 className="font-heading text-lg text-foreground">Required Documents</h3>
+                <p className="text-sm text-muted-foreground">Please upload the following documents to complete your application.</p>
+              </div>
+
+              <div className="space-y-3">
+                {REQUIRED_DOCS.map((doc) => {
+                  const uploaded = documents.find(d => d.type === doc.value);
+                  return (
+                    <div key={doc.value} className="flex items-center justify-between rounded-lg border border-border p-4">
+                      <div className="flex items-center gap-3">
+                        <FileText className="h-5 w-5 text-muted-foreground" />
+                        <div>
+                          <p className="text-sm font-medium text-foreground">{doc.label}</p>
+                          {uploaded && (
+                            <p className="text-xs text-muted-foreground">
+                              {uploaded.file.name} ({formatSize(uploaded.file.size)})
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {uploaded ? (
+                          <div className="flex items-center gap-2">
+                            <CheckCircle className="h-4 w-4 text-success" />
+                            <Button variant="ghost" size="sm" onClick={() => removeDocument(documents.indexOf(uploaded))}>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <Button variant="outline" size="sm" onClick={() => fileRef.current?.click()}>
+                            <Upload className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <input ref={fileRef} type="file" className="hidden" onChange={handleFileUpload} accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" />
+
+              <div className="flex justify-between">
+                <Button variant="outline" onClick={() => setStep(2)}><ArrowLeft className="h-4 w-4" /> Back</Button>
+                <Button variant="gold" onClick={() => setStep(4)} disabled={documents.length < REQUIRED_DOCS.length}>
+                  Next <ArrowRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {step === 4 && (
+            <div className="space-y-5">
               <h3 className="font-heading text-lg text-foreground">Review Your Application</h3>
               <div className="grid grid-cols-2 gap-4 rounded-lg bg-muted p-4 text-sm">
                 <div>
@@ -281,8 +409,20 @@ const LoanApplicationPage = () => {
                   <p className="text-foreground">{form.purpose}</p>
                 </div>
               )}
+              <div className="rounded-lg bg-muted p-4">
+                <p className="text-sm text-muted-foreground mb-2">Uploaded Documents</p>
+                <div className="space-y-2">
+                  {documents.map((doc, index) => (
+                    <div key={index} className="flex items-center gap-2 text-sm">
+                      <CheckCircle className="h-4 w-4 text-success" />
+                      <span>{REQUIRED_DOCS.find(d => d.value === doc.type)?.label}</span>
+                      <span className="text-muted-foreground">({doc.file.name})</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
               <div className="flex justify-between">
-                <Button variant="outline" onClick={() => setStep(2)}><ArrowLeft className="h-4 w-4" /> Back</Button>
+                <Button variant="outline" onClick={() => setStep(3)}><ArrowLeft className="h-4 w-4" /> Back</Button>
                 <Button variant="gold" onClick={handleSubmit} disabled={submitting}>
                   {submitting ? 'Submitting...' : 'Submit Application'}
                 </Button>

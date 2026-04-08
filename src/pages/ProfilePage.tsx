@@ -34,6 +34,7 @@ const ProfilePage = () => {
   useEffect(() => {
     supabase.from('profiles').select('*').eq('user_id', user!.id).single().then(({ data }) => {
       if (data) {
+        setForm({
           full_name: data.full_name || '',
           phone: data.phone || '',
           date_of_birth: data.date_of_birth || '',
