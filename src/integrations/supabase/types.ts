@@ -284,6 +284,38 @@ export type Database = {
         }
         Relationships: []
       }
+      user_mappings: {
+        Row: {
+          created_at: string
+          firebase_uid: string
+          id: string
+          supabase_user_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          firebase_uid: string
+          id?: string
+          supabase_user_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          firebase_uid?: string
+          id?: string
+          supabase_user_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_mappings_supabase_user_id_fkey"
+            columns: ["supabase_user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
