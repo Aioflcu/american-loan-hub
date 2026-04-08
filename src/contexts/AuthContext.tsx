@@ -2,6 +2,9 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
+const isValidUuid = (value: string) =>
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+
 interface AuthContextType {
   user: User | null;
   loading: boolean;
@@ -18,13 +21,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
+    const validateUser = async (sessionUser: User | null) => {
+      if (sessionUser && !isValidUuid(sessionUser.id)) {
+        await supabase.auth.signOut();
+        return null;
+      }
+      return sessionUser;
+    };
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      const validatedUser = await validateUser(session?.user ?? null);
+      setUser(validatedUser);
       setLoading(false);
     });
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      const validatedUser = await validateUser(session?.user ?? null);
+      setUser(validatedUser);
       setLoading(false);
     });
 

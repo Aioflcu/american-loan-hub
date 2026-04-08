@@ -59,8 +59,18 @@ const LoanApplicationPage = () => {
     const loanType = LOAN_TYPES.find((t) => t.value === form.loan_type);
     const estimatedRate = loanType ? (loanType.minRate + loanType.maxRate) / 2 : 0;
 
+    if (!user?.id || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(user.id)) {
+      toast({
+        title: 'Session error',
+        description: 'Your account session is invalid. Please sign out and sign in again.',
+        variant: 'destructive',
+      });
+      setSubmitting(false);
+      return;
+    }
+
     const { data, error } = await supabase.from('loan_applications').insert({
-      user_id: user!.id,
+      user_id: user.id,
       loan_type: form.loan_type,
       amount: Number(form.amount),
       term_months: Number(form.term_months),
