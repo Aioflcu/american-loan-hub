@@ -78,7 +78,7 @@ const ProfilePage = () => {
     <AppLayout>
       <div className="mx-auto max-w-2xl space-y-6">
         <div>
-          <h1 className="font-heading text-3xl text-foreground">Profile</h1>
+          <h1 className="font-heading text-2xl lg:text-3xl text-foreground">Profile</h1>
           <p className="mt-1 text-sm text-muted-foreground">Manage your personal information</p>
         </div>
 

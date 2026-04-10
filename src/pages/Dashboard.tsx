@@ -142,14 +142,14 @@ const Dashboard = () => {
     <AppLayout>
       <div className="space-y-8">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="font-heading text-3xl text-foreground">
+            <h1 className="font-heading text-2xl lg:text-3xl text-foreground">
               Welcome back, {user?.user_metadata?.full_name?.split(' ')[0] || 'there'}
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">Here's your loan portfolio overview</p>
           </div>
-          <Button variant="gold" onClick={() => navigate('/apply')}>
+          <Button variant="gold" size="sm" onClick={() => navigate('/apply')} className="w-full sm:w-auto">
             Apply for Loan <ArrowRight className="h-4 w-4" />
           </Button>
         </div>

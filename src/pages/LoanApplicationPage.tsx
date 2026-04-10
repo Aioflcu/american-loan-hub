@@ -217,23 +217,23 @@ const LoanApplicationPage = () => {
     <AppLayout>
       <div className="mx-auto max-w-2xl space-y-6">
         <div>
-          <h1 className="font-heading text-3xl text-foreground">Apply for a Loan</h1>
+          <h1 className="font-heading text-2xl lg:text-3xl text-foreground">Apply for a Loan</h1>
           <p className="mt-1 text-sm text-muted-foreground">Complete the form below to submit your application</p>
         </div>
 
         {/* Progress */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 overflow-x-auto">
           {[1, 2, 3, 4].map((s) => (
-            <div key={s} className="flex items-center gap-2">
+            <div key={s} className="flex items-center gap-2 flex-shrink-0">
               <div className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold ${
                 step >= s ? 'bg-gradient-gold text-accent-foreground' : 'bg-muted text-muted-foreground'
               }`}>
                 {s}
               </div>
-              {s < 4 && <div className={`h-0.5 w-12 ${step > s ? 'bg-secondary' : 'bg-muted'}`} />}
+              {s < 4 && <div className={`h-0.5 w-8 sm:w-12 ${step > s ? 'bg-secondary' : 'bg-muted'}`} />}
             </div>
           ))}
-          <span className="ml-3 text-sm text-muted-foreground">
+          <span className="ml-3 text-sm text-muted-foreground flex-shrink-0">
             {step === 1 ? 'Loan Details' : step === 2 ? 'Employment' : step === 3 ? 'Documents' : 'Review'}
           </span>
         </div>

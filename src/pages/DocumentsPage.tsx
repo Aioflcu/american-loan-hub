@@ -101,7 +101,7 @@ const DocumentsPage = () => {
     <AppLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="font-heading text-3xl text-foreground">Documents</h1>
+          <h1 className="font-heading text-2xl lg:text-3xl text-foreground">Documents</h1>
           <p className="mt-1 text-sm text-muted-foreground">Upload and manage your loan documents</p>
         </div>
 

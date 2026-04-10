@@ -47,7 +47,7 @@ const PaymentsPage = () => {
     <AppLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="font-heading text-3xl text-foreground">Payments</h1>
+          <h1 className="font-heading text-2xl lg:text-3xl text-foreground">Payments</h1>
           <p className="mt-1 text-sm text-muted-foreground">Track your loan payments</p>
         </div>
 
@@ -76,32 +76,64 @@ const PaymentsPage = () => {
             <p className="text-muted-foreground">No payments yet. Payments will appear here once you have an active loan.</p>
           </div>
         ) : (
-          <div className="rounded-xl border border-border bg-card shadow-card overflow-hidden">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-border bg-muted/50">
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground">Status</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground">Date</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground">Total</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground">Principal</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground">Interest</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {payments.map((p) => (
-                  <tr key={p.id} className="hover:bg-muted/30 transition-colors">
-                    <td className="px-4 py-3 flex items-center gap-2 text-sm capitalize text-card-foreground">
-                      {statusIcon(p.status)} {p.status}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-muted-foreground">{formatDate(p.payment_date)}</td>
-                    <td className="px-4 py-3 text-sm font-medium text-card-foreground">{formatCurrency(Number(p.amount))}</td>
-                    <td className="px-4 py-3 text-sm text-muted-foreground">{p.principal_amount ? formatCurrency(Number(p.principal_amount)) : '—'}</td>
-                    <td className="px-4 py-3 text-sm text-muted-foreground">{p.interest_amount ? formatCurrency(Number(p.interest_amount)) : '—'}</td>
+          <>
+            {/* Mobile Cards */}
+            <div className="block lg:hidden space-y-4">
+              {payments.map((p) => (
+                <div key={p.id} className="rounded-xl border border-border bg-card p-4 shadow-card">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      {statusIcon(p.status)}
+                      <span className="text-sm font-medium capitalize">{p.status}</span>
+                    </div>
+                    <span className="text-sm text-muted-foreground">{formatDate(p.payment_date)}</span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-4 text-sm">
+                    <div>
+                      <p className="text-muted-foreground">Total</p>
+                      <p className="font-medium">{formatCurrency(Number(p.amount))}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Principal</p>
+                      <p className="font-medium">{p.principal_amount ? formatCurrency(Number(p.principal_amount)) : '—'}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Interest</p>
+                      <p className="font-medium">{p.interest_amount ? formatCurrency(Number(p.interest_amount)) : '—'}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop Table */}
+            <div className="hidden lg:block rounded-xl border border-border bg-card shadow-card overflow-hidden">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-border bg-muted/50">
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground">Status</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground">Date</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground">Total</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground">Principal</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground">Interest</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {payments.map((p) => (
+                    <tr key={p.id} className="hover:bg-muted/30 transition-colors">
+                      <td className="px-4 py-3 flex items-center gap-2 text-sm capitalize text-card-foreground">
+                        {statusIcon(p.status)} {p.status}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-muted-foreground">{formatDate(p.payment_date)}</td>
+                      <td className="px-4 py-3 text-sm font-medium text-card-foreground">{formatCurrency(Number(p.amount))}</td>
+                      <td className="px-4 py-3 text-sm text-muted-foreground">{p.principal_amount ? formatCurrency(Number(p.principal_amount)) : '—'}</td>
+                      <td className="px-4 py-3 text-sm text-muted-foreground">{p.interest_amount ? formatCurrency(Number(p.interest_amount)) : '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
     </AppLayout>

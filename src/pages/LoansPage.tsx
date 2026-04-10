@@ -41,12 +41,12 @@ const LoansPage = () => {
   return (
     <AppLayout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="font-heading text-3xl text-foreground">My Loans</h1>
+            <h1 className="font-heading text-2xl lg:text-3xl text-foreground">My Loans</h1>
             <p className="mt-1 text-sm text-muted-foreground">Track all your loan applications</p>
           </div>
-          <Button variant="gold" onClick={() => navigate('/apply')}>
+          <Button variant="gold" size="sm" onClick={() => navigate('/apply')} className="w-full sm:w-auto">
             <PlusCircle className="h-4 w-4" /> New Application
           </Button>
         </div>
@@ -57,34 +57,70 @@ const LoansPage = () => {
             <Button variant="gold" className="mt-4" onClick={() => navigate('/apply')}>Apply for a Loan</Button>
           </div>
         ) : (
-          <div className="rounded-xl border border-border bg-card shadow-card overflow-hidden">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-border bg-muted/50">
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground">Type</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground">Amount</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground">Term</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground">Rate</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground">Monthly</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground">Status</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground">Date</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {applications.map((app) => (
-                  <tr key={app.id} className="hover:bg-muted/30 transition-colors">
-                    <td className="px-4 py-3 text-sm font-medium text-card-foreground">{loanTypeLabel(app.loan_type)}</td>
-                    <td className="px-4 py-3 text-sm text-card-foreground">{formatCurrency(app.amount)}</td>
-                    <td className="px-4 py-3 text-sm text-muted-foreground">{app.term_months} mo</td>
-                    <td className="px-4 py-3 text-sm text-muted-foreground">{app.interest_rate ? `${Number(app.interest_rate).toFixed(2)}%` : '—'}</td>
-                    <td className="px-4 py-3 text-sm text-card-foreground">{app.monthly_payment ? formatCurrency(app.monthly_payment) : '—'}</td>
-                    <td className="px-4 py-3"><LoanStatusBadge status={app.status as any} /></td>
-                    <td className="px-4 py-3 text-sm text-muted-foreground">{formatDate(app.submitted_at || app.created_at)}</td>
+          <>
+            {/* Mobile Cards */}
+            <div className="block lg:hidden space-y-4">
+              {applications.map((app) => (
+                <div key={app.id} className="rounded-xl border border-border bg-card p-4 shadow-card">
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <h3 className="font-medium text-card-foreground">{loanTypeLabel(app.loan_type)}</h3>
+                      <p className="text-sm text-muted-foreground">{formatDate(app.submitted_at || app.created_at)}</p>
+                    </div>
+                    <LoanStatusBadge status={app.status as any} />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <p className="text-muted-foreground">Amount</p>
+                      <p className="font-medium">{formatCurrency(app.amount)}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Term</p>
+                      <p className="font-medium">{app.term_months} mo</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Rate</p>
+                      <p className="font-medium">{app.interest_rate ? `${Number(app.interest_rate).toFixed(2)}%` : '—'}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Monthly</p>
+                      <p className="font-medium">{app.monthly_payment ? formatCurrency(app.monthly_payment) : '—'}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop Table */}
+            <div className="hidden lg:block rounded-xl border border-border bg-card shadow-card overflow-hidden">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-border bg-muted/50">
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground">Type</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground">Amount</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground">Term</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground">Rate</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground">Monthly</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground">Status</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground">Date</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {applications.map((app) => (
+                    <tr key={app.id} className="hover:bg-muted/30 transition-colors">
+                      <td className="px-4 py-3 text-sm font-medium text-card-foreground">{loanTypeLabel(app.loan_type)}</td>
+                      <td className="px-4 py-3 text-sm text-card-foreground">{formatCurrency(app.amount)}</td>
+                      <td className="px-4 py-3 text-sm text-muted-foreground">{app.term_months} mo</td>
+                      <td className="px-4 py-3 text-sm text-muted-foreground">{app.interest_rate ? `${Number(app.interest_rate).toFixed(2)}%` : '—'}</td>
+                      <td className="px-4 py-3 text-sm text-card-foreground">{app.monthly_payment ? formatCurrency(app.monthly_payment) : '—'}</td>
+                      <td className="px-4 py-3"><LoanStatusBadge status={app.status as any} /></td>
+                      <td className="px-4 py-3 text-sm text-muted-foreground">{formatDate(app.submitted_at || app.created_at)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
     </AppLayout>
